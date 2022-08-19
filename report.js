@@ -33,7 +33,6 @@ function getIssueContent(issue) {
   // return { title, links: _links, updated_at };
   return issue;
 }
-// curl -XGET https://gitlab.com/api/v4/projects/14003804/issues/670/notes?private_token\=glpat-MnTX6mgpLwypnVd3jbsx\&order_by\=updated_at
 
 function getNoteApiOptions(url) {
   return {
