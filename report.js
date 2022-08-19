@@ -3,7 +3,7 @@ require('dotenv').config();
 const axios = require('axios');
 const asyncjs = require('async');
 
-const PORTAL_ID = 14003804;
+const PROJECT_ID = 14003804;
 const TRACKING_TYPE = ['plan', 'coding', 'fix', 'review'];
 
 function isTrackingNote(content) {
@@ -109,7 +109,7 @@ async function getIssueReport(issue) {
 
 async function main() {
   const page = 1;
-  const issueOpts = getIssueApiOptions(PORTAL_ID, {
+  const issueOpts = getIssueApiOptions(PROJECT_ID, {
     updated_after: new Date('2022-08-14T00:00:00Z'),
     page,
     per_page: 100,
