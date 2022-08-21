@@ -1,7 +1,5 @@
-require('dotenv').config();
-
-const axios = require('axios');
-const asyncjs = require('async');
+import axios from 'axios';
+import asyncjs from 'async';
 
 const PROJECT_ID = 14003804;
 const TRACKING_TYPE = ['plan', 'coding', 'fix', 'review'];
@@ -20,7 +18,7 @@ function getIssueApiOptions(projectId, query) {
     url: `projects/${projectId}/issues`,
     method: 'GET',
     params: {
-      private_token: process.env.TOKEN,
+      private_token: process.env.REACT_APP_TOKEN,
       scope: 'all',
       order_by: 'updated_at',
       ...query,
@@ -39,7 +37,7 @@ function getNoteApiOptions(url) {
     url,
     method: 'GET',
     params: {
-      private_token: process.env.TOKEN,
+      private_token: process.env.REACT_APP_TOKEN,
       sort: 'asc',
     },
   };
@@ -107,14 +105,15 @@ async function getIssueReport(issue) {
   };
 }
 
-async function main() {
+async function getReportData(updated_after) {
   const page = 1;
   const issueOpts = getIssueApiOptions(PROJECT_ID, {
-    updated_after: new Date('2022-08-14T00:00:00Z'),
+    updated_after: updated_after || new Date('2022-08-14T00:00:00Z'),
     page,
     per_page: 100,
   });
 
+  console.log('click', issueOpts);
   const issues = await callApi(issueOpts)
     .then(resp => resp.data)
     .catch(error => console.log(error));
@@ -129,6 +128,8 @@ async function main() {
   // report.forEach(row => console.log(row));
   // console.log(resp?.headers);
   // console.log(`Total: ${result?.length}`);
+  return report;
 }
 
-main();
+export { getReportData };
+
