@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const data = [
+const defaultData = [
   {
     name: 'Page A',
     uv: 4000,
@@ -46,34 +46,43 @@ const data = [
   },
 ];
 
-export default class Chart extends PureComponent {
-  static demoUrl = 'https://codesandbox.io/s/mixed-bar-chart-q4hgc';
+function ReportChart(props) {
+  const { chartData, bars } = props;
+
+  const colors = ["#8884d8", "#82ca9d", "#ffc658", "#84a392"];
   // <ResponsiveContainer width="100vh" height="100vh">
   // </ResponsiveContainer>
+  console.log('-----------');
+  console.log('chartData', chartData);
+  console.log('bars', bars);
 
-  render() {
-    return (
-      <BarChart
-        width={500}
-        height={300}
-        data={data}
-        margin={{
-          top: 20,
-          right: 30,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="pv" stackId="a" fill="#8884d8" />
-        <Bar dataKey="amt" stackId="a" fill="#82ca9d" />
-        <Bar dataKey="uv" fill="#ffc658" />
-      </BarChart>
-    );
-  }
+  return (
+    <BarChart
+      width={500}
+      height={300}
+      data={chartData ?? defaultData}
+      margin={{
+        top: 20,
+        right: 30,
+        left: 20,
+        bottom: 5,
+      }}
+    >
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="iid" />
+      <YAxis />
+      <Tooltip />
+      <Legend />
+      {bars.map((bar, index) => (
+        <Bar dataKey={bar} stackId="a" fill={colors[index]} />
+      ))}
+      {/*
+      <Bar dataKey="pv" stackId="a" fill="#8884d8" />
+      <Bar dataKey="amt" stackId="a" fill="#82ca9d" />
+      <Bar dataKey="uv" fill="#ffc658" />
+      */}
+    </BarChart>
+  );
 }
 
+export default ReportChart;

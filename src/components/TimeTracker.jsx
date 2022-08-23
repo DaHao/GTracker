@@ -43,25 +43,19 @@ function getNoteApiOptions(url) {
   };
 }
 
-function convertTime(token) {
-  const pattern = /(\d+)([dhm]+)/;
-  let [,time, unit] = token.match(pattern);
-
-  if (unit === 'd') time = Number(time) * 8;
-  if (unit === 'm') time = Number(time) / 60;
-
-  return Number(time);
-}
-
-function getSpentTime(content) {
-  const pattern = /added (.*) of time spent/;
-
-  let [, spentTime] = content?.match(pattern);
+function convertTime(spentTime) {
+  if (!spentTime) return NaN;
 
   return spentTime.split(' ')?.reduce((accu, token) => {
-    const time = convertTime(token);
+    const pattern = /(\d+)([dhm]+)/;
+    let [,time, unit] = token.match(pattern);
+
+    if (unit === 'd') time = Number(time) * 8;
+    if (unit === 'm') time = Number(time) / 60;
+
     return accu + Number(time);
   }, 0);
+
 }
 
 function getNotesReport(notes) {
@@ -73,12 +67,13 @@ function getNotesReport(notes) {
     const spentNote = notes[i + 1];
     if (!spentNote || spentNote.author?.name !== note.author?.name) continue;
 
-    const spentTime = getSpentTime(spentNote.body);
+    const pattern = /added (.*) of time spent/;
+    let [, spentTime] = spentNote.body?.match(pattern);
 
     report.push({
       authorName: note.author?.name,
       summary: note.body,
-      time: spentTime,
+      time: convertTime(spentTime),
     });
   }
 
@@ -101,7 +96,9 @@ async function getIssueReport(issue) {
     iid,
     title,
     report,
-    time_estimate: time_stats?.human_time_estimate,
+    time_estimate: convertTime(
+      time_stats?.human_time_estimate,
+    ),
   };
 }
 
@@ -113,17 +110,15 @@ async function getReportData(updated_after) {
     per_page: 100,
   });
 
-  console.log('click', issueOpts);
   const issues = await callApi(issueOpts)
     .then(resp => resp.data)
     .catch(error => console.log(error));
 
   const report = await asyncjs.mapSeries(issues, getIssueReport)
     .catch(error => console.log(error));
-  
+
   // const testIssue = issues[1];
   // const result = await getIssueReport(testIssue);
-  console.log(report);
 
   // report.forEach(row => console.log(row));
   // console.log(resp?.headers);

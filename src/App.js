@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 import { getReportData } from './components/TimeTracker';
-import Chart from './components/Chart';
+import ReportChart from './components/Chart';
 
       // <header className="App-header">
       // </header>
@@ -23,9 +23,26 @@ function App() {
     getReport();
   }, [currentDate]);
 
+  const totalBar = new Set();
+  const chartData = report.map(issue => {
+    const barData = issue.report.reduce((accu, row) => (
+      { ...accu, [`${row.authorName}-${row.summary}`]: row.time }
+    ), {});
+    totalBar.add(...Object.keys(barData));
+
+    return {
+      iid: issue.iid,
+      // estimate: issue.time_estimate,
+      // title: issue.title,
+      ...barData,
+    };
+  }).filter(row => Object.keys(row).length > 1);
+
+  totalBar.delete(undefined);
+
   return (
     <div className="App">
-      <Chart/>
+      <ReportChart chartData={chartData} bars={[...totalBar]}/>
       <div>{JSON.stringify(report)}</div>
     </div>
   );
