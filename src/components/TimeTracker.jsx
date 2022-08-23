@@ -44,6 +44,8 @@ function getNoteApiOptions(url) {
 }
 
 function convertTime(token) {
+  if (!token) return NaN;
+
   const pattern = /(\d+)([dhm]+)/;
   let [,time, unit] = token.match(pattern);
 
@@ -96,6 +98,7 @@ async function getIssueReport(issue) {
     .catch(error => console.log(error));
 
   const report = getNotesReport(notes);
+  const estimate = convertTime(time_stats?.human_time_estimate);
 
   return {
     iid,
