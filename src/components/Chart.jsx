@@ -52,9 +52,6 @@ function ReportChart(props) {
   const colors = ["#8884d8", "#82ca9d", "#ffc658", "#84a392"];
   // <ResponsiveContainer width="100vh" height="100vh">
   // </ResponsiveContainer>
-  console.log('-----------');
-  console.log('chartData', chartData);
-  console.log('bars', bars);
 
   return (
     <BarChart

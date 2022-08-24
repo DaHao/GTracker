@@ -103,10 +103,11 @@ async function getIssueReport(issue) {
   };
 }
 
-async function getReportData(updated_after) {
+async function getReportData(updated_after, updated_before) {
   const page = 1;
   const issueOpts = getIssueApiOptions(PROJECT_ID, {
-    updated_after: updated_after || new Date('2022-08-14T00:00:00Z'),
+    updated_after,
+    updated_before,
     page,
     per_page: 100,
   });
