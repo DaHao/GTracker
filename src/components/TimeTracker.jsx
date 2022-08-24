@@ -91,6 +91,7 @@ async function getIssueReport(issue) {
     .catch(error => console.log(error));
 
   const report = getNotesReport(notes);
+  const estimate = convertTime(time_stats?.human_time_estimate);
 
   return {
     iid,
