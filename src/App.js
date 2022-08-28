@@ -1,29 +1,29 @@
-import { useEffect, useState } from 'react';
+/** @jsxImportSource @emotion/react */
+import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
-import './App.css';
+// import './App.css';
 
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { css } from '@emotion/react';
+
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { getReportData } from './components/TimeTracker';
-import ReportChart from './components/Chart';
-
-      // <header className="App-header">
-      // </header>
-      // <TimeTracker />
+import ReportChart from './components/ReportChart';
 
 function App() {
   // const [currentDate, setCurrentDate] = useState(new Date('2022-08-14T00:00:00Z'));
   const [report, setReport] = useState([]);
 
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(null);
-
-  const onChange = (dates) => {
-    const [start, end] = dates;
-    setStartDate(start);
-    setEndDate(end);
-  };
+  const [startDate, setStartDate] = useState(Date.now());
+  const [endDate, setEndDate] = useState(Date.now());
 
   function onClick(event) {
     console.log('--------------');
@@ -61,21 +61,51 @@ function App() {
   }).filter(row => Object.keys(row).length > 1);
 
   totalBar.delete(undefined);
+  console.log('---------report');
+  console.table(report);
 
   return (
-    <div className="App">
-      <DatePicker
-        selected={startDate}
-        onChange={onChange}
-        startDate={startDate}
-        endDate={endDate}
-        selectsRange
-        inline
-      />
-      <button onClick={onClick}>Get Report</button>
-      <ReportChart chartData={chartData} bars={[...totalBar]}/>
-      <div>{JSON.stringify(report)}</div>
-    </div>
+    <Box>
+      <Paper css={css`margin: 16px; padding: 4px`}>
+        <LocalizationProvider
+          dateAdapter={AdapterMoment}>
+          <DatePicker
+            css={css`margin: 5px;`}
+            label="Start Date"
+            value={startDate}
+            onChange={(newValue) => {
+              console.log('-------- startDate', newValue.toDate()); 
+              setStartDate(newValue);
+            }}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </LocalizationProvider>
+        <LocalizationProvider
+          dateAdapter={AdapterMoment}>
+          <DatePicker
+            css={css`margin: 5px;`}
+            label="End Date"
+            value={endDate}
+            onChange={(newValue) => {
+              console.log('-------- endDate', newValue.toDate()); 
+              setEndDate(newValue);
+            }}
+            renderInput={(params) => <TextField {...params} />}
+          />
+        </LocalizationProvider>
+        <Button
+          css={css`margin: 5px; height: 54px`}
+          variant="contained"
+          onClick={onClick}
+        >
+          Get Report
+        </Button>
+      </Paper>
+      <Paper css={css`margin: 16px; padding: 4px`}>
+        <ReportChart chartData={chartData} bars={[...totalBar]}/>
+      </Paper>
+
+    </Box>
   );
 }
 

@@ -71,7 +71,7 @@ function ReportChart(props) {
       <Tooltip />
       <Legend />
       {bars.map((bar, index) => (
-        <Bar dataKey={bar} stackId="a" fill={colors[index]} />
+        <Bar key={index} dataKey={bar} stackId="a" fill={colors[index]} />
       ))}
       {/*
       <Bar dataKey="pv" stackId="a" fill="#8884d8" />

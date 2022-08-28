@@ -81,7 +81,7 @@ function getNotesReport(notes) {
 }
 
 async function getIssueReport(issue) {
-  const { id, iid, title, _links, time_stats } = issue;
+  const { id, iid, title, _links, time_stats, updated_at } = issue;
   const noteUrl = _links?.notes;
 
   if (!noteUrl) return [];
@@ -100,6 +100,7 @@ async function getIssueReport(issue) {
     time_estimate: convertTime(
       time_stats?.human_time_estimate,
     ),
+    updated_at,
   };
 }
 
