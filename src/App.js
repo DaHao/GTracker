@@ -103,6 +103,9 @@ function App() {
       </Paper>
       <Paper css={css`margin: 16px; padding: 4px`}>
         <ReportChart chartData={chartData} bars={[...totalBar]}/>
+        <pre>
+          {JSON.stringify(report, null, 2)}
+        </pre>
       </Paper>
 
     </Box>

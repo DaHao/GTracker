@@ -129,5 +129,27 @@ async function getReportData(updated_after, updated_before) {
   return report;
 }
 
+function getMRApiOptions(projectId, query) {
+  return {
+    baseURL: 'https://gitlab.com/api/v4/',
+    url: `projects/${projectId}/merge_requests`,
+    method: 'GET',
+    params: {
+      private_token: process.env.REACT_APP_TOKEN,
+      scope: 'all',
+      order_by: 'updated_at',
+      ...query,
+    },
+  };
+}
+
+/*
+async function getMRData(updated_after, updated_before) {
+  const page = 1;
+
+  return pages;
+}
+*/
+
 export { getReportData };
 
