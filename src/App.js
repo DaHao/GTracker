@@ -15,7 +15,7 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import { getReportData } from './components/TimeTracker';
+import { getReportData, getMRData } from './components/TimeTracker';
 import ReportChart from './components/ReportChart';
 
 function App() {
@@ -31,6 +31,8 @@ function App() {
     console.log(endDate);
     getReportData(startDate, endDate)
       .then(data => { setReport(data); });
+
+    getMRData(startDate, endDate);
   }
 
   /*

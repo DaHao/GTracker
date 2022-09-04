@@ -39,6 +39,7 @@ function getNoteApiOptions(url) {
     params: {
       private_token: process.env.REACT_APP_TOKEN,
       sort: 'asc',
+      per_page: 100,
     },
   };
 }
@@ -104,6 +105,30 @@ async function getIssueReport(issue) {
   };
 }
 
+async function getMRReport(mr) {
+  const { id, iid, title, time_stats, updated_at } = mr;
+  const noteUrl = `https://gitlab.com/api/v4/projects/${PROJECT_ID}/merge_requests/${iid}/notes`;
+
+  const notes = await callApi(getNoteApiOptions(noteUrl))
+    .then(resp => resp?.data)
+    .catch(error => console.log(error));
+
+  console.log(`MR ${iid} notes`, notes);
+  const report = getNotesReport(notes);
+  const estimate = convertTime(time_stats?.human_time_estimate);
+  console.log(`MR ${iid} report`, report);
+
+  return {
+    iid,
+    title,
+    report,
+    time_estimate: convertTime(
+      time_stats?.human_time_estimate,
+    ),
+    updated_at,
+  };
+}
+
 async function getReportData(updated_after, updated_before) {
   const page = 1;
   const issueOpts = getIssueApiOptions(PROJECT_ID, {
@@ -143,13 +168,36 @@ function getMRApiOptions(projectId, query) {
   };
 }
 
-/*
 async function getMRData(updated_after, updated_before) {
   const page = 1;
+  const mrOptions = getMRApiOptions(PROJECT_ID, {
+    updated_after,
+    updated_before,
+    page,
+    per_page: 100,
+  });
 
-  return pages;
+  const mrs = await callApi(mrOptions)
+    .then(resp => resp.data)
+    .catch(error => console.log(error));
+
+
+  console.log('---------- mrs', mrs);
+  getMRReport(mrs[0]);
+
+  /*
+  const report = await asyncjs.mapSeries(issues, getIssueReport)
+    .catch(error => console.log(error));
+    */
+
+  // const testIssue = issues[1];
+  // const result = await getIssueReport(testIssue);
+
+  // report.forEach(row => console.log(row));
+  // console.log(resp?.headers);
+  // console.log(`Total: ${result?.length}`);
+  return mrs;
 }
-*/
 
-export { getReportData };
+export { getReportData, getMRData };
 
