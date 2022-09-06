@@ -113,10 +113,8 @@ async function getMRReport(mr) {
     .then(resp => resp?.data)
     .catch(error => console.log(error));
 
-  console.log(`MR ${iid} notes`, notes);
   const report = getNotesReport(notes);
   const estimate = convertTime(time_stats?.human_time_estimate);
-  console.log(`MR ${iid} report`, report);
 
   return {
     iid,
@@ -129,7 +127,7 @@ async function getMRReport(mr) {
   };
 }
 
-async function getReportData(updated_after, updated_before) {
+async function getIssueData(updated_after, updated_before) {
   const page = 1;
   const issueOpts = getIssueApiOptions(PROJECT_ID, {
     updated_after,
@@ -181,9 +179,8 @@ async function getMRData(updated_after, updated_before) {
     .then(resp => resp.data)
     .catch(error => console.log(error));
 
-
-  console.log('---------- mrs', mrs);
-  getMRReport(mrs[0]);
+  const report = await asyncjs.mapSeries(mrs, getMRReport)
+    .catch(error => console.log(error));
 
   /*
   const report = await asyncjs.mapSeries(issues, getIssueReport)
@@ -196,8 +193,16 @@ async function getMRData(updated_after, updated_before) {
   // report.forEach(row => console.log(row));
   // console.log(resp?.headers);
   // console.log(`Total: ${result?.length}`);
-  return mrs;
+  return report;
 }
 
-export { getReportData, getMRData };
+function removeEmptyReport(report) {
+  if (!Array.isArray(report)) return report;
 
+  return report.reduce((accu, r) => {
+    if (r.report.length > 0) accu.push(r);
+    return accu;
+  }, []);
+}
+
+export { getIssueData, getMRData, removeEmptyReport };

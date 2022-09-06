@@ -15,40 +15,56 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-import { getReportData, getMRData } from './components/TimeTracker';
+import { getIssueData, getMRData, removeEmptyReport } from './components/TimeTracker';
 import ReportChart from './components/ReportChart';
+
+function renderTable(data, type) {
+  if (!data) return null;
+  return Object.entries(data).map(([name, issues], index) => {
+    return (
+      <div key={index}>
+        <h2>{name}</h2>
+        <ul>
+          {Object.entries(issues).map(([iid, issue]) => {
+            const { title, plan, coding, fix, review } = issue;
+            let url = "";
+            if (type === 'mr') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/merge_requests/${iid}`;
+            if (type === 'issue') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/issues/${iid}`;
+            return (
+              <div>
+                <li><a href={url} target="_blank">{iid} {title}</a></li>
+                <div>{plan && `plan: ${plan}`}</div>
+                <div>{coding && `coding: ${coding}`}</div>
+                <div>{fix && `fix: ${fix}`}</div>
+                <div>{review && `review: ${review}`}</div>
+              </div>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  })
+}
 
 function App() {
   // const [currentDate, setCurrentDate] = useState(new Date('2022-08-14T00:00:00Z'));
-  const [report, setReport] = useState([]);
+  const [issues, setIssues] = useState(undefined);
+  const [mrs, setMRs] = useState(undefined)
+  const [ready, setReady] = useState(false);
 
   const [startDate, setStartDate] = useState(Date.now());
   const [endDate, setEndDate] = useState(Date.now());
 
   function onClick(event) {
-    console.log('--------------');
-    console.log(startDate);
-    console.log(endDate);
-    getReportData(startDate, endDate)
-      .then(data => { setReport(data); });
+    getIssueData(startDate, endDate)
+      .then(data => { setIssues(removeEmptyReport(data)); });
 
-    getMRData(startDate, endDate);
+    getMRData(startDate, endDate)
+      .then(data => { setMRs(removeEmptyReport(data)); });
   }
 
-  /*
-  useEffect(() => {
-    const getReport = async() => {
-      const data = await getReportData(currentDate);
-      // console.log('data', data);
-      setReport(data);
-    };
-
-    getReport();
-  }, [currentDate]);
-  */
-
   const totalBar = new Set();
-  const chartData = report.map(issue => {
+  const chartData = (issues ?? []).map(issue => {
     const barData = issue.report.reduce((accu, row) => (
       { ...accu, [`${row.authorName}-${row.summary}`]: row.time }
     ), {});
@@ -64,7 +80,35 @@ function App() {
 
   totalBar.delete(undefined);
   console.log('---------report');
-  console.table(report);
+  console.log(issues);
+  console.log(mrs);
+
+  function getPersonData(data) {
+    if (!data) return undefined;
+    // if (issues === undefined || mrs === undefined) return undefined;
+
+    /*
+     * issueReport
+     * { Hao: { iid: { title: xxx, plan: x, coding: x } } }
+     */
+    const report = data.reduce((accu, row) => {
+      const { iid, title, report } = row;
+
+      report.forEach(r => {
+        const { authorName: name, summary, time } = r;
+
+        if (!accu[name]) accu[name] = { };
+        if (!accu[name][iid]) accu[name][iid] = { title };
+        if (!accu[name][iid][summary]) accu[name][iid][summary] = 0;
+
+        accu[name][iid][summary] += time;
+      });
+
+      return accu;
+    }, {});
+
+    return report;
+  }
 
   return (
     <Box>
@@ -104,10 +148,10 @@ function App() {
         </Button>
       </Paper>
       <Paper css={css`margin: 16px; padding: 4px`}>
-        <ReportChart chartData={chartData} bars={[...totalBar]}/>
-        <pre>
-          {JSON.stringify(report, null, 2)}
-        </pre>
+        <h1>Issue</h1>
+          {renderTable(getPersonData(issues), 'issue')}
+        <h1>Merge Request</h1>
+          {renderTable(getPersonData(mrs), 'mr')}
       </Paper>
 
     </Box>
