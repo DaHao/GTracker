@@ -38,6 +38,7 @@ function renderEntry(iid, entry, type) {
   let url = "";
   if (type === 'mr') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/merge_requests/${iid}`;
   if (type === 'issue') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/issues/${iid}`;
+
   return (
     <div style={{ marginBottom: '8px' }}>
       <li><a href={url} target="_blank">{iid} {title}</a></li>
@@ -99,7 +100,7 @@ function renderTable(issues, mrs, diffDay) {
       <div key={index} style={{ marginBottom: '48px' }}>
         <h1 style={{ marginBottom: 0 }}>
           <span style={{ color: 'blue' }}>{`${name}`}</span>
-          &nbsp;{`${total} Hours`}
+          &nbsp;&nbsp;&nbsp;&nbsp;{`${total} / ${diffDay * 8} Hours `}
         </h1>
         <div style={{ display: 'flex' }}>
           <LinearProgressWithLabel value={progress} />
