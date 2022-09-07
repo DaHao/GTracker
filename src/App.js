@@ -66,14 +66,22 @@ function getTotal(entries) {
   }, {});
 }
 
-function renderTotal(total) {
+function renderTotal(total, type) {
   const [p, c, f, r] = total;
   return (
     <span>
-      <b>Plan:</b>&nbsp;&nbsp;{p} &nbsp;&nbsp;&nbsp;&nbsp;
-      <b>Coding:</b>&nbsp;&nbsp;{c} &nbsp;&nbsp;&nbsp;&nbsp;
-      <b>Fix:</b>&nbsp;&nbsp;{f} &nbsp;&nbsp;&nbsp;&nbsp;
-      <b>Review:</b>&nbsp;&nbsp;{r}
+      {type === 'issue' && (
+        <>
+          <b>Plan:</b>&nbsp;&nbsp;{p} &nbsp;&nbsp;&nbsp;&nbsp;
+          <b>Coding:</b>&nbsp;&nbsp;{c} &nbsp;&nbsp;&nbsp;&nbsp;
+        </>
+      )}
+      {type === 'mr' && (
+        <>
+          <b>Fix:</b>&nbsp;&nbsp;{f} &nbsp;&nbsp;&nbsp;&nbsp;
+          <b>Review:</b>&nbsp;&nbsp;{r}
+        </>
+      )}
     </span>
   );
 }
@@ -106,14 +114,14 @@ function renderTable(issues, mrs, diffDay) {
           <LinearProgressWithLabel value={progress} />
         </div>
         <h2>Issues</h2>
-        {renderTotal(issueTotal)}
+        {renderTotal(issueTotal, 'issue')}
         <ul>
           {Object.entries(issuesObj).map(([iid, issue]) => {
             return renderEntry(iid, issue, 'issue');
           })}
         </ul>
         <h2>Merge request</h2>
-        {renderTotal(mrTotal)}
+        {renderTotal(mrTotal, 'mr')}
         <ul>
           {Object.entries(mrsObj).map(([iid, mr]) => {
             return renderEntry(iid, mr, 'mr');
