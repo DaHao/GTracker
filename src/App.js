@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import React, { useEffect, useState } from 'react';
 import logo from './logo.svg';
+import moment from 'moment';
 // import './App.css';
 
 import { css } from '@emotion/react';
@@ -10,6 +11,8 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import LinearProgress from '@mui/material/LinearProgress';
+import CircularProgress from '@mui/material/CircularProgress'
 
 import ReactDatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,105 +20,144 @@ import "react-datepicker/dist/react-datepicker.css";
 import { getIssueData, getMRData, removeEmptyReport } from './components/TimeTracker';
 import ReportChart from './components/ReportChart';
 
-function renderTable(source, type) {
-  if (!source) return null;
-  console.log('-----', type, source);
+function LinearProgressWithLabel(props) {
+  const { value } = props;
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', width: '320px' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <LinearProgress variant="determinate" {...props} />
+      </Box>
+      <Box sx={{ minWidth: 32 }}>
+        <Typography variant="body2" color="text.secondary">{`${value}%`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+function renderEntry(iid, entry, type) {
+  const { title, plan, coding, fix, review } = entry;
+  let url = "";
+  if (type === 'mr') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/merge_requests/${iid}`;
+  if (type === 'issue') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/issues/${iid}`;
+  return (
+    <div style={{ marginBottom: '8px' }}>
+      <li><a href={url} target="_blank">{iid} {title}</a></li>
+      <div>{plan && `plan: ${plan}`}</div>
+      <div>{coding && `coding: ${coding}`}</div>
+      <div>{fix && `fix: ${fix}`}</div>
+      <div>{review && `review: ${review}`}</div>
+    </div>
+  );
+}
 
-  const total = Object.entries(source).reduce((accu, [name, issues]) => {
+function getTotal(entries) {
+  if (!entries) return [0, 0, 0, 0];
+
+  return Object.entries(entries).reduce((accu, [name, person]) => {
     let [p = 0, c = 0, f = 0, r = 0] = accu[name] || [];
-    console.log('--------', name, [p, c, f, r]);
-    Object.entries(issues).forEach(([iid, issue]) => {
+    Object.entries(person).forEach(([iid, issue]) => {
       if (issue.plan)   p += Number(issue.plan);
       if (issue.coding) c += Number(issue.coding);
       if (issue.fix)    f += Number(issue.fix);
       if (issue.review) r += Number(issue.review);
-      console.log('-------------', iid, [p, c, f, r]);
     });
     accu[name] = [p, c, f, r];
     return accu;
   }, {});
-  console.log('total', total);
+}
 
-  return Object.entries(source).map(([name, issues], index) => {
-    const [p, c, f, r] = total[name] || [];
+function renderTotal(total) {
+  const [p, c, f, r] = total;
+  return (
+    <span>
+      <b>Plan:</b>&nbsp;&nbsp;{p} &nbsp;&nbsp;&nbsp;&nbsp;
+      <b>Coding:</b>&nbsp;&nbsp;{c} &nbsp;&nbsp;&nbsp;&nbsp;
+      <b>Fix:</b>&nbsp;&nbsp;{f} &nbsp;&nbsp;&nbsp;&nbsp;
+      <b>Review:</b>&nbsp;&nbsp;{r}
+    </span>
+  );
+}
+
+function renderTable(issues, mrs, diffDay) {
+  const authorNames = [...new Set(
+    [...Object.keys(issues || {}), ...Object.keys(mrs || {})],
+  )];
+
+  const issuesTotal = getTotal(issues);
+  const mrsTotal = getTotal(mrs);
+
+  // {`${p+c+f+r} Hours`}
+  return authorNames.map((name, index) => {
+    const issuesObj = issues?.[name] || {};
+    const mrsObj = mrs?.[name] || {};
+    const issueTotal = issuesTotal?.[name] || [];
+    const mrTotal = mrsTotal?.[name] || [];
+
+    const total = [...issueTotal, ...mrTotal].reduce((sum, i) => sum + i, 0);
+    const progress = diffDay ? total / (diffDay * 8) * 100 : 0;
+
     return (
       <div key={index} style={{ marginBottom: '48px' }}>
-        <h2><span style={{ color: 'blue' }}>{`${name}`}</span>&nbsp;{`${p+c+f+r} Hours`}</h2>
-        <span>
-          <b>Plan:</b>&nbsp;&nbsp;{p} &nbsp;&nbsp;&nbsp;&nbsp;
-          <b>Coding:</b>&nbsp;&nbsp;{c} &nbsp;&nbsp;&nbsp;&nbsp;
-          <b>Fix:</b>&nbsp;&nbsp;{f} &nbsp;&nbsp;&nbsp;&nbsp;
-          <b>Review:</b>&nbsp;&nbsp;{r}
-        </span>
+        <h1 style={{ marginBottom: 0 }}>
+          <span style={{ color: 'blue' }}>{`${name}`}</span>
+          &nbsp;{`${total} Hours`}
+        </h1>
+        <div style={{ display: 'flex' }}>
+          <LinearProgressWithLabel value={progress} />
+        </div>
+        <h2>Issues</h2>
+        {renderTotal(issueTotal)}
         <ul>
-          {Object.entries(issues).map(([iid, issue]) => {
-            const { title, plan, coding, fix, review } = issue;
-            let url = "";
-            if (type === 'mr') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/merge_requests/${iid}`;
-            if (type === 'issue') url = `https://gitlab.com/geminiopencloud/engineering/portal/xportal/-/issues/${iid}`;
-            return (
-              <div>
-                <li><a href={url} target="_blank">{iid} {title}</a></li>
-                <div>{plan && `plan: ${plan}`}</div>
-                <div>{coding && `coding: ${coding}`}</div>
-                <div>{fix && `fix: ${fix}`}</div>
-                <div>{review && `review: ${review}`}</div>
-              </div>
-            );
+          {Object.entries(issuesObj).map(([iid, issue]) => {
+            return renderEntry(iid, issue, 'issue');
+          })}
+        </ul>
+        <h2>Merge request</h2>
+        {renderTotal(mrTotal)}
+        <ul>
+          {Object.entries(mrsObj).map(([iid, mr]) => {
+            return renderEntry(iid, mr, 'mr');
           })}
         </ul>
       </div>
     );
-  })
+  });
 }
 
 function App() {
   // const [currentDate, setCurrentDate] = useState(new Date('2022-08-14T00:00:00Z'));
   const [issues, setIssues] = useState(undefined);
   const [mrs, setMRs] = useState(undefined)
-  const [ready, setReady] = useState(false);
+  const [iReady, setIReady] = useState(false);
+  const [mReady, setMReady] = useState(false);
+  const [click, setClick] = useState(false);
 
   const [startDate, setStartDate] = useState(Date.now());
   const [endDate, setEndDate] = useState(Date.now());
 
   function onClick(event) {
+    setClick(true);
     getIssueData(startDate, endDate)
-      .then(data => { setIssues(removeEmptyReport(data)); });
+      .then(data => {
+        setIssues(removeEmptyReport(data));
+        setIReady(true);
+      });
 
     getMRData(startDate, endDate)
-      .then(data => { setMRs(removeEmptyReport(data)); });
+      .then(data => {
+        setMRs(removeEmptyReport(data));
+        setMReady(true);
+      });
   }
 
-  const totalBar = new Set();
-  const chartData = (issues ?? []).map(issue => {
-    const barData = issue.report.reduce((accu, row) => (
-      { ...accu, [`${row.authorName}-${row.summary}`]: row.time }
-    ), {});
-    totalBar.add(...Object.keys(barData));
-
-    return {
-      iid: issue.iid,
-      // estimate: issue.time_estimate,
-      // title: issue.title,
-      ...barData,
-    };
-  }).filter(row => Object.keys(row).length > 1);
-
-  totalBar.delete(undefined);
-  console.log('---------report');
-  console.log(issues);
-  console.log(mrs);
-
-  function getPersonData(data) {
-    if (!data) return undefined;
-    // if (issues === undefined || mrs === undefined) return undefined;
+  function getPersonData(source) {
+    if (!source) return undefined;
 
     /*
      * issueReport
      * { Hao: { iid: { title: xxx, plan: x, coding: x } } }
      */
-    const report = data.reduce((accu, row) => {
-      const { iid, title, report } = row;
+    const report = source.reduce((accu, issue) => {
+      const { iid, title, report } = issue;
 
       report.forEach(r => {
         const { authorName: name, summary, time } = r;
@@ -139,10 +181,13 @@ function App() {
   };
   */
   const paperStyle = ({
-    backgroundColor: `rgba(255, 255, 255, 0.5)`,
+    backgroundColor: `rgba(255, 255, 255, 0.8)`,
     margin: '16px',
     padding: '8px',
   });
+  const issuePerson = getPersonData(issues);
+  const mrPerson = getPersonData(mrs);
+  const diffDay = endDate ? moment(endDate).diff(moment(startDate), 'days') + 1 : undefined;
 
   return (
     <Box>
@@ -151,9 +196,9 @@ function App() {
           selected={startDate}
           onChange={(dates) => {
             const [start, end] = dates;
-            console.log('---- change ');
-            console.log(start, ', ', end);
-            setStartDate(start);
+            const sDate = moment(start).startOf('day').toDate();
+            const eDate = end ? moment(end).endOf('day').toDate() : null;
+            setStartDate(sDate);
             setEndDate(end);
           }}
           startDate={startDate}
@@ -169,13 +214,12 @@ function App() {
           Get Report
         </Button>
       </Paper>
-      <Paper sx={{ ...paperStyle, paddingLeft: '32px' }}>
-        <h1>Issue</h1>
-          {renderTable(getPersonData(issues), 'issue')}
-        <h1>Merge Request</h1>
-          {renderTable(getPersonData(mrs), 'mr')}
-      </Paper>
 
+      <Paper sx={{ ...paperStyle, paddingLeft: '32px' }}>
+        {click && (!iReady || !mReady) && <CircularProgress />}
+        {(iReady && mReady)
+          && renderTable(getPersonData(issues), getPersonData(mrs), diffDay)}
+      </Paper>
     </Box>
   );
 }
