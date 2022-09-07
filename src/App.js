@@ -11,19 +11,42 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import ReactDatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 import { getIssueData, getMRData, removeEmptyReport } from './components/TimeTracker';
 import ReportChart from './components/ReportChart';
 
-function renderTable(data, type) {
-  if (!data) return null;
-  return Object.entries(data).map(([name, issues], index) => {
+function renderTable(source, type) {
+  if (!source) return null;
+  console.log('-----', type, source);
+
+  const total = Object.entries(source).reduce((accu, [name, issues]) => {
+    let [p = 0, c = 0, f = 0, r = 0] = accu[name] || [];
+    console.log('--------', name, [p, c, f, r]);
+    Object.entries(issues).forEach(([iid, issue]) => {
+      if (issue.plan)   p += Number(issue.plan);
+      if (issue.coding) c += Number(issue.coding);
+      if (issue.fix)    f += Number(issue.fix);
+      if (issue.review) r += Number(issue.review);
+      console.log('-------------', iid, [p, c, f, r]);
+    });
+    accu[name] = [p, c, f, r];
+    return accu;
+  }, {});
+  console.log('total', total);
+
+  return Object.entries(source).map(([name, issues], index) => {
+    const [p, c, f, r] = total[name] || [];
     return (
-      <div key={index}>
-        <h2>{name}</h2>
+      <div key={index} style={{ marginBottom: '48px' }}>
+        <h2><span style={{ color: 'blue' }}>{`${name}`}</span>&nbsp;{`${p+c+f+r} Hours`}</h2>
+        <span>
+          <b>Plan:</b>&nbsp;&nbsp;{p} &nbsp;&nbsp;&nbsp;&nbsp;
+          <b>Coding:</b>&nbsp;&nbsp;{c} &nbsp;&nbsp;&nbsp;&nbsp;
+          <b>Fix:</b>&nbsp;&nbsp;{f} &nbsp;&nbsp;&nbsp;&nbsp;
+          <b>Review:</b>&nbsp;&nbsp;{r}
+        </span>
         <ul>
           {Object.entries(issues).map(([iid, issue]) => {
             const { title, plan, coding, fix, review } = issue;
@@ -110,44 +133,43 @@ function App() {
     return report;
   }
 
+  /*
+  const cssPaper = {
+    root: css`margin: 8px; padding: 4px; display: flex;`,
+  };
+  */
+  const paperStyle = ({
+    backgroundColor: `rgba(255, 255, 255, 0.5)`,
+    margin: '16px',
+    padding: '8px',
+  });
+
   return (
     <Box>
-      <Paper css={css`margin: 16px; padding: 4px`}>
-        <LocalizationProvider
-          dateAdapter={AdapterMoment}>
-          <DatePicker
-            css={css`margin: 5px;`}
-            label="Start Date"
-            value={startDate}
-            onChange={(newValue) => {
-              console.log('-------- startDate', newValue.toDate()); 
-              setStartDate(newValue);
-            }}
-            renderInput={(params) => <TextField {...params} />}
-          />
-        </LocalizationProvider>
-        <LocalizationProvider
-          dateAdapter={AdapterMoment}>
-          <DatePicker
-            css={css`margin: 5px;`}
-            label="End Date"
-            value={endDate}
-            onChange={(newValue) => {
-              console.log('-------- endDate', newValue.toDate()); 
-              setEndDate(newValue);
-            }}
-            renderInput={(params) => <TextField {...params} />}
-          />
-        </LocalizationProvider>
+      <Paper sx={{ ...paperStyle, display: 'flex' }}>
+        <ReactDatePicker
+          selected={startDate}
+          onChange={(dates) => {
+            const [start, end] = dates;
+            console.log('---- change ');
+            console.log(start, ', ', end);
+            setStartDate(start);
+            setEndDate(end);
+          }}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          inline
+        />
         <Button
-          css={css`margin: 5px; height: 54px`}
+          css={css`margin: 5px; height: 40px;`}
           variant="contained"
           onClick={onClick}
         >
           Get Report
         </Button>
       </Paper>
-      <Paper css={css`margin: 16px; padding: 4px`}>
+      <Paper sx={{ ...paperStyle, paddingLeft: '32px' }}>
         <h1>Issue</h1>
           {renderTable(getPersonData(issues), 'issue')}
         <h1>Merge Request</h1>
