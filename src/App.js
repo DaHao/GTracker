@@ -208,7 +208,7 @@ function App() {
             const sDate = moment(start).startOf('day').toDate();
             const eDate = end ? moment(end).endOf('day').toDate() : null;
             setStartDate(sDate);
-            setEndDate(end);
+            setEndDate(eDate);
           }}
           startDate={startDate}
           endDate={endDate}

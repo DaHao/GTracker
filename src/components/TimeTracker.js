@@ -64,9 +64,6 @@ function isBetweenNote(updated_at, startDate, endDate) {
   const compareDate = moment(updated_at);
   const start = moment(startDate);
   const end = moment(endDate);
-  console.log('----- between', compareDate.isBetween(start, end));
-  console.log(startDate, ' ~ ', endDate);
-  console.log('compare', compareDate);
   return compareDate.isBetween(start, end);
 }
 
@@ -77,6 +74,9 @@ function getNotesReport(notes, startDate, endDate) {
     if (!isTrackingNote(note?.body)) continue;
     if (!isBetweenNote(note.updated_at, startDate, endDate)) continue;
 
+    // notes 用 asc 排序，預設欄位是 created_at
+    // 順序會是先 comment (plan, coding, fix, review)
+    // 再操作 /spend (body = 'added xxx of time spent')
     const spentNote = notes[i + 1];
     if (!spentNote || spentNote.author?.name !== note.author?.name) continue;
 
@@ -159,12 +159,6 @@ async function getIssueData(updated_after, updated_before) {
   const report = await asyncjs.mapSeries(issues, getIssueReport(updated_after, updated_before))
     .catch(error => console.log(error));
 
-  // const testIssue = issues[1];
-  // const result = await getIssueReport(testIssue);
-
-  // report.forEach(row => console.log(row));
-  // console.log(resp?.headers);
-  // console.log(`Total: ${result?.length}`);
   return report;
 }
 
@@ -198,17 +192,6 @@ async function getMRData(updated_after, updated_before) {
   const report = await asyncjs.mapSeries(mrs, getMRReport(updated_after, updated_before))
     .catch(error => console.log(error));
 
-  /*
-  const report = await asyncjs.mapSeries(issues, getIssueReport)
-    .catch(error => console.log(error));
-    */
-
-  // const testIssue = issues[1];
-  // const result = await getIssueReport(testIssue);
-
-  // report.forEach(row => console.log(row));
-  // console.log(resp?.headers);
-  // console.log(`Total: ${result?.length}`);
   return report;
 }
 
